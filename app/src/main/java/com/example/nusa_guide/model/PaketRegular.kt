@@ -1,10 +1,17 @@
 package com.example.nusa_guide.model
 
 data class PaketRegular(
-    val id: Long = 0L,
-    val nama: String = "",
-    val gambar: Int = 0,
-    val harga: Long = 0,
-    val jarak: Double = 0.0,
-    val rating: Float = 0.0f
+    val id: Int,
+    val nama: String,
+    val gambar: Int,
+    val harga: Int,
+    val hariBerlibur: String,
+    val jarak: Double,
+    val deskripsi: String,
+    val cuplikanPhotos: List<Int>,
+    val informasiTourGuide: String,
+    val informasiHarga: String,
+    val ratingReview: Double,
+    val ulasan: List<Ulasan>,
+    val informasiPaket: InformasiPaket
 )
