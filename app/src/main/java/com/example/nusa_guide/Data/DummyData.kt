@@ -229,7 +229,7 @@ object DummyData {
             gambar = R.drawable.tour_image_1, // pastikan untuk memiliki gambar yang sesuai di drawable
             harga = 50000,
             jarak = 10.0,
-            rating = 4.5f
+
         ),
         PaketRegular(
             id = 2,
@@ -237,7 +237,7 @@ object DummyData {
             gambar = R.drawable.bg_on_boarding, // pastikan untuk memiliki gambar yang sesuai di drawable
             harga = 75000,
             jarak = 20.0,
-            rating = 4.7f
+
         ),
         PaketRegular(
             id = 3,
@@ -245,7 +245,7 @@ object DummyData {
             gambar = R.drawable.tour_image_1, // pastikan untuk memiliki gambar yang sesuai di drawable
             harga = 60000,
             jarak = 30.0,
-            rating = 4.6f
+
         ),
         PaketRegular(
             id = 4,
@@ -253,7 +253,7 @@ object DummyData {
             gambar = R.drawable.bg_on_boarding, // pastikan untuk memiliki gambar yang sesuai di drawable
             harga = 55000,
             jarak = 40.0,
-            rating = 4.8f
+
         ),
         PaketRegular(
             id = 5,
@@ -261,7 +261,7 @@ object DummyData {
             gambar = R.drawable.tour_image_1, // pastikan untuk memiliki gambar yang sesuai di drawable
             harga = 45000,
             jarak = 25.0,
-            rating = 4.4f
+
         )
     )
 }

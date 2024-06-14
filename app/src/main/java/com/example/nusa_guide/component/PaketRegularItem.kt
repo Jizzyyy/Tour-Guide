@@ -72,7 +72,7 @@ fun PaketRegularItem(paketRegular: PaketRegular) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = paketRegular.rating.toString(),
+                        text = paketRegular.ratingReview.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
@@ -168,7 +168,7 @@ fun PaketRegularItemPreview() {
             gambar = R.drawable.tour_image_1,
             harga = 350000,
             jarak = 0.64,
-            rating = 4.5f
+            ratingReview = 4.5f
         )
         PaketRegularItem(paketRegular = dummyData)
     }
