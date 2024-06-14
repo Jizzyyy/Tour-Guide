@@ -5,13 +5,13 @@ data class PaketRegular(
     val nama: String,
     val gambar: Int,
     val harga: Int,
-    val hariBerlibur: String,
+    val hariBerlibur: String? = null,
     val jarak: Double,
-    val deskripsi: String,
-    val cuplikanPhotos: List<Int>,
-    val informasiTourGuide: String,
-    val informasiHarga: String,
-    val ratingReview: Double,
-    val ulasan: List<Ulasan>,
-    val informasiPaket: InformasiPaket
+    val deskripsi: String? = null,
+    val cuplikanPhotos: List<Int>? = null,
+    val informasiTourGuide: String? = null,
+    val informasiHarga: String? = null,
+    val ratingReview: Float? = null,
+    val ulasan: List<Ulasan>? = null,
+    val informasiPaket: InformasiPaket? = null
 )
