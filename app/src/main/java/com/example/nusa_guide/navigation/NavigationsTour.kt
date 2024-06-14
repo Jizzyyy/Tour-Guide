@@ -46,7 +46,7 @@ val paketRegular = listOf(
         gambar = R.drawable.tour_image_1,
         harga = 350000,
         jarak = 0.64,
-        rating = 4.5f
+        ratingReview = 4.5f
     ),
     PaketRegular(
         id = 2,
@@ -54,7 +54,7 @@ val paketRegular = listOf(
         gambar = R.drawable.tour_image_1,
         harga = 250000,
         jarak = 0.34,
-        rating = 4.0f
+        ratingReview = 4.0f
     ),
     PaketRegular(
         id = 3,
@@ -62,7 +62,7 @@ val paketRegular = listOf(
         gambar = R.drawable.tour_image_1,
         harga = 450000,
         jarak = 1.0,
-        rating = 4.8f
+        ratingReview = 4.8f
     ),
     PaketRegular(
         id = 4,
@@ -70,7 +70,7 @@ val paketRegular = listOf(
         gambar = R.drawable.tour_image_1,
         harga = 500000,
         jarak = 1.5,
-        rating = 4.7f
+        ratingReview = 4.7f
     ),
     PaketRegular(
         id = 5,
@@ -78,7 +78,7 @@ val paketRegular = listOf(
         gambar = R.drawable.tour_image_1,
         harga = 550000,
         jarak = 2.0,
-        rating = 4.9f
+        ratingReview = 4.9f
     ),
     PaketRegular(
         id = 6,
@@ -86,7 +86,7 @@ val paketRegular = listOf(
         gambar = R.drawable.tour_image_1,
         harga = 600000,
         jarak = 2.5,
-        rating = 5.0f
+        ratingReview = 5.0f
     ),
 )
 
