@@ -1,23 +1,21 @@
 package com.example.nusa_guide.repository
 
-import com.example.nusa_guide.model.Rekomendasi
-import com.google.firebase.firestore.FirebaseFirestore
+import android.util.Log
+import com.example.nusa_guide.Api.RetrofitInstance
+import com.example.nusa_guide.model.RekomendasiModel
 
-class RekomendasiRepository(private val firestore: FirebaseFirestore) {
-    fun getPaketRekomendasi(
-        onComplete: (List<Rekomendasi>) -> Unit,
-        onError: (Exception) -> Unit
-    ) {
-        firestore.collection("PaketRekomendasi")
-            .get()
-            .addOnSuccessListener { result ->
-                val rekomendasiList = result.documents.mapNotNull { document ->
-                    document.toObject(Rekomendasi::class.java)
-                }
-                onComplete(rekomendasiList)
+class RekomendasiRepository {
+    suspend fun getRekomendasi(): List<RekomendasiModel> {
+        return try {
+            val response = RetrofitInstance.api.getRekomendasi()
+            if (response.message == "GET all wisata success!") {
+                response.data
+            } else {
+                emptyList()
             }
-            .addOnFailureListener { exception ->
-                onError(exception)
-            }
+        } catch (e: Exception) {
+            Log.e("RekomendasiRepository", "Error fetching data: ${e.message}")
+            emptyList()
+        }
     }
 }

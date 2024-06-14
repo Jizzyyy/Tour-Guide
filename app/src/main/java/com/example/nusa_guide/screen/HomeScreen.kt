@@ -1,13 +1,15 @@
 package com.example.nusa_guide.screen
 
-import androidx.compose.foundation.BorderStroke
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,30 +18,27 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,370 +46,309 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.nusa_guide.R
-import com.example.nusa_guide.component.PaketPremiumItem
-import com.example.nusa_guide.component.RekomendasiItem
-import com.example.nusa_guide.model.DummyData
-import com.example.nusa_guide.model.Rekomendasi
-import com.example.nusa_guide.model.User
+import com.example.nusa_guide.component.CardRekomendasiItem
 import com.example.nusa_guide.navigation.NavigationTourScreen
 import com.example.nusa_guide.repository.RekomendasiRepository
-import com.example.nusa_guide.ui.theme.black51
-import com.example.nusa_guide.ui.theme.brandPrimary500
+import com.example.nusa_guide.ui.theme.gray
+import com.example.nusa_guide.ui.theme.gray50
 import com.example.nusa_guide.ui.theme.gray700
-import com.example.nusa_guide.viewModel.AuthViewModel
-import com.example.nusa_guide.viewModel.PaketRekomendasiViewModelFactory
+import com.example.nusa_guide.ui.theme.grayText
 import com.example.nusa_guide.viewModel.RekomendasiViewModel
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.launch
+import com.example.nusa_guide.viewModel.RekomendasiViewModelFactory
 
+@SuppressLint("RememberReturnType")
 @Composable
 fun HomeScreen(
     navController: NavController,
-    authViewModel: AuthViewModel
 ) {
+    val rekomendasiRepository = remember { RekomendasiRepository() }
     val rekomendasiViewModel: RekomendasiViewModel = viewModel(
-        factory = PaketRekomendasiViewModelFactory(
-            RekomendasiRepository(Firebase.firestore)
-        )
+        factory = RekomendasiViewModelFactory(rekomendasiRepository)
     )
-    val paketRekomendasi by rekomendasiViewModel.paketRekomendasi.observeAsState(emptyList())
-    val error by rekomendasiViewModel.error.observeAsState("")
+    val state by rekomendasiViewModel.state.collectAsState()
 
-    var currentUser by remember { mutableStateOf<User?>(null) }
 
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(key1 = Unit) {
-        authViewModel.getCurrentUserDetails { user ->
-            scope.launch {
-                currentUser = user
-            }
-        }
+    var isSelected by remember {
+        mutableStateOf(true)
     }
-
     Column(
         modifier = Modifier
             .padding(
                 vertical = 20.dp,
                 horizontal = 16.dp,
             )
-            .fillMaxWidth()
+            .fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        ProfileAndNotificationRow(navController, currentUser)
-
-        SearchBar(navController)
-
-        CategorySection()
-
-        RekomendasiSection(navController, paketRekomendasi)
-
-        PaketPremiumSection(navController)
-
-        PaketRegularSection(navController)
-
-        if (error.isNotEmpty()) {
-            Text(text = "Error: $error", color = Color.Red)
-        }
-    }
-}
-
-@Composable
-fun ProfileAndNotificationRow(
-    navController: NavController,
-    currentUser: User?
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ProfileImage()
-        Spacer(modifier = Modifier.width(8.dp))
-        ProfileText(currentUser)
-        Spacer(modifier = Modifier.weight(1f))
-        Icon(
-            painter = painterResource(id = R.drawable.icon_cart),
-            contentDescription = "icon-keranjang",
-            modifier = Modifier
-                .size(24.dp)
-                .clickable {
-                    navController.navigate(
-                        NavigationTourScreen.CartScreen.name
-                    )
-                }
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        NotificationIcon()
-    }
-}
-
-@Composable
-fun ProfileImage() {
-    Icon(
-        imageVector = Icons.Filled.AccountCircle,
-        contentDescription = "Profile Image",
-        modifier = Modifier
-            .size(48.dp)
-            .clip(CircleShape),
-    )
-}
-
-@Composable
-fun ProfileText(currentUser: User?) {
-    Column {
-        Text(
-            text = currentUser?.name ?: "Loading...",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = "Mari eksplor indahnya Bali",
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-    }
-}
-
-@Composable
-fun NotificationIcon() {
-    Icon(
-        painter = painterResource(id = R.drawable.icon_notification),
-        contentDescription = "Notification Icon",
-        modifier = Modifier.size(24.dp)
-    )
-}
-
-@Composable
-fun SearchBar(navController: NavController) {
-    Spacer(modifier = Modifier.height(10.dp))
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .clickable {
-                navController.navigate(
-                    NavigationTourScreen.SearchScreen.name
-                )
-            },
-        border = BorderStroke(
-            width = 1.dp,
-            color = black51
-        ),
-        shape = RoundedCornerShape(
-            size = 10.dp
-        )
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start,
-            modifier = Modifier.padding(10.dp)
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Cari tour guide Anda",
-                color = gray700,
-            )
+            Surface(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clickable {
+                        navController.navigate(
+                            NavigationTourScreen.AboutProfileScreen.name
+                        )
+                    },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = "icon-circle",
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(
+                verticalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Text(
+                    text = "Muhammad Al Kahfi",
+                    fontSize = 16.sp,
+                    color = gray700,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "Mari eksplore indahnya Bali",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Row {
+                Icon(
+                    painter = painterResource(id = R.drawable.icon_cart),
+                    contentDescription = "icon-cart",
+                    modifier = Modifier
+                        .size(25.dp)
+                        .clickable {
+                            navController.navigate(
+                                NavigationTourScreen.CartScreen.name
+                            )
+                        }
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.icon_notification),
+                    contentDescription = "icon-notification",
+                    modifier = Modifier.size(25.dp)
+                )
+            }
         }
-    }
-}
-
-@Composable
-fun CategorySection() {
-    Column(modifier = Modifier.padding(2.dp)) {
+        Spacer(modifier = Modifier.height(30.dp))
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp)
+                .border(
+                    width = 2.dp,
+                    color = gray,
+                    shape = RoundedCornerShape(
+                        size = 10.dp
+                    ),
+                )
+                .clickable {
+                    navController.navigate(
+                        NavigationTourScreen.SearchScreen.name
+                    )
+                },
+            shape = RoundedCornerShape(
+                size = 10.dp
+            ),
+            color = gray50,
+            shadowElevation = 5.dp
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        vertical = 10.dp,
+                        horizontal = 17.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = "icon-search",
+                    modifier = Modifier.size(30.dp),
+                    gray700
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Cari Tour Guide Anda",
+                    color = grayText,
+                    fontSize = 17.sp,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(30.dp))
         Text(
             text = "Kategori",
             fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp)
+            color = gray700,
+            fontWeight = FontWeight.SemiBold
         )
+        Spacer(modifier = Modifier.height(25.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            CategoryItem(
-                imageRes = R.drawable.bg_on_boarding,
-                title = "Terdekat"
-            )
-            CategoryItem(
-                imageRes = R.drawable.bg_on_boarding,
-                title = "Populer"
-            )
-            CategoryItem(
-                imageRes = R.drawable.bg_on_boarding,
-                title = "Alam"
-            )
-            CategoryItem(
-                imageRes = R.drawable.bg_on_boarding,
-                title = "Kuliner"
-            )
-        }
-    }
-}
-
-@Composable
-fun CategoryItem(imageRes: Int, title: String) {
-    Column(
-        modifier = Modifier
-            .width(80.dp)
-            .padding(2.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(id = imageRes),
-            contentDescription = title,
-            modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.LightGray),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = title,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.Gray
-        )
-    }
-}
-
-@Composable
-fun RekomendasiSection(
-    navController: NavController,
-    rekomendasiList: List<Rekomendasi>
-) {
-    Column(modifier = Modifier.padding(2.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Rekomendasi",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                Text(
-                    text = "Rekomendasi Wisata Terbaik Buat Kamu",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-            Text(
-                text = "Lihat Semua >",
-                color = brandPrimary500,
-                fontSize = 14.sp,
-                modifier = Modifier
-                    .clickable {
-                        navController.navigate(
-                            NavigationTourScreen.RekomendasiScreen.name
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.height(100.dp)
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .border(
+                            width = if (isSelected) 1.dp else 2.dp,
+                            color = if (isSelected) gray else gray700,
+                            shape = RoundedCornerShape(
+                                size = 10.dp
+                            )
                         )
-                    }
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(rekomendasiList) { rekomendasi ->
-                RekomendasiItem(rekomendasi, onClick = {
-                    navController.navigate(
-                        NavigationTourScreen.DetailScreen.name
+                        .clickable {
+                            isSelected = !isSelected
+                        },
+                    shape = RoundedCornerShape(
+                        size = 10.dp
+                    ),
+                    shadowElevation = 20.dp
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.alam),
+                        contentDescription = "image-terdekat",
+                        contentScale = ContentScale.Crop,
                     )
-                })
-            }
-        }
-    }
-}
-
-@Composable
-fun PaketPremiumSection(navController: NavController) {
-    Column(modifier = Modifier.padding(2.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
+                }
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "Paket Premium",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                Text(
-                    text = "Paket Wisata Terbaik Buat Kamu",
-                    fontSize = 12.sp,
-                    color = Color.Gray
+                    text = "Alam",
+                    fontSize = 14.sp,
+                    color = gray700,
                 )
             }
-            Text(
-                text = "Lihat Semua >",
-                color = brandPrimary500,
-                fontSize = 14.sp,
-                modifier = Modifier
-                    .clickable {
-                        navController.navigate(
-                            NavigationTourScreen.PaketPremiumScreen.name
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.height(100.dp)
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .border(
+                            width = if (isSelected) 1.dp else 2.dp,
+                            color = if (isSelected) gray else gray700,
+                            shape = RoundedCornerShape(
+                                size = 10.dp
+                            )
                         )
-                    }
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            items(DummyData.paketPremiumList) { paketpremium ->
-                PaketPremiumItem(paketpremium)
-            }
-        }
-    }
-}
-
-
-@Composable
-fun PaketRegularSection(navController: NavController) {
-    Column(modifier = Modifier.padding(2.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
+                        .clickable {
+                            isSelected = !isSelected
+                        },
+                    shape = RoundedCornerShape(
+                        size = 10.dp
+                    ),
+                    shadowElevation = 10.dp
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.budaya),
+                        contentDescription = "image-terdekat",
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "Paket Reguler",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                Text(
-                    text = "Paket Wisata Terjangkau Buat Kamu",
-                    fontSize = 12.sp,
-                    color = Color.Gray
+                    text = "Budaya",
+                    fontSize = 14.sp,
+                    color = gray700,
                 )
             }
-            Text(
-                text = "Lihat Semua >",
-                color = brandPrimary500,
-                fontSize = 14.sp,
-                modifier = Modifier
-                    .clickable {
-                        navController.navigate(
-                            NavigationTourScreen.PaketRegulerScreen.name
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.height(100.dp)
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .border(
+                            width = if (isSelected) 1.dp else 2.dp,
+                            color = if (isSelected) gray else gray700,
+                            shape = RoundedCornerShape(
+                                size = 10.dp
+                            )
                         )
-                    }
-            )
+                        .clickable {
+                            isSelected = !isSelected
+                        },
+                    shape = RoundedCornerShape(
+                        size = 10.dp
+                    ),
+                    shadowElevation = 10.dp
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.tour),
+                        contentDescription = "image-terdekat",
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Tour",
+                    fontSize = 14.sp,
+                    color = gray700,
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.height(100.dp)
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .border(
+                            width = if (isSelected) 1.dp else 2.dp,
+                            color = if (isSelected) gray else gray700,
+                            shape = RoundedCornerShape(
+                                size = 10.dp
+                            )
+                        )
+                        .clickable {
+                            isSelected = !isSelected
+                        },
+                    shape = RoundedCornerShape(
+                        size = 10.dp
+                    ),
+                    shadowElevation = 10.dp
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.aktifitas_air),
+                        contentDescription = "image-terdekat",
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Aktifitas Air",
+                    fontSize = 14.sp,
+                    color = gray700,
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            items(DummyData.paketRegularList) { paketRegular ->
-                PaketRegularItem(paketRegular)
+        Spacer(modifier = Modifier.height(20.dp))
+
+
+        LazyRow {
+            if (state.isEmpty()) {
+                item {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+            items(state) { rekomendasi  ->
+                CardRekomendasiItem(rekomendasi = rekomendasi) {
+                    /*TODO NOT FUNCTION */
+                }
             }
         }
     }
@@ -418,9 +356,8 @@ fun PaketRegularSection(navController: NavController) {
 
 @Preview(showSystemUi = true)
 @Composable
-fun HomeScreenPreview() {
+fun PreviewHomeScreen() {
     HomeScreen(
-        rememberNavController(),
-        authViewModel = viewModel()
+        navController = rememberNavController(),
     )
 }
