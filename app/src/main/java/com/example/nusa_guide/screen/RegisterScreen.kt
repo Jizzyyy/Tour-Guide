@@ -1,5 +1,6 @@
 package com.example.nusa_guide.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -25,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,60 +45,55 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.nusa_guide.R
+import com.example.nusa_guide.api.RetrofitInstance
+import com.example.nusa_guide.api.response.AuthResult
+import com.example.nusa_guide.data.DataStoreManager
+import com.example.nusa_guide.model.RegisterModel
 import com.example.nusa_guide.navigation.NavigationTourScreen
+import com.example.nusa_guide.repository.AuthRepository
 import com.example.nusa_guide.ui.theme.brandPrimary500
 import com.example.nusa_guide.ui.theme.gray
 import com.example.nusa_guide.ui.theme.gray700
 import com.example.nusa_guide.ui.theme.gray900
 import com.example.nusa_guide.ui.theme.primary700
+import com.example.nusa_guide.viewModel.AuthViewModel
+import com.example.nusa_guide.viewModel.AuthViewModelFactory
 import com.example.nusa_guide.widget.ButtonStyle
 
 @Composable
 fun RegisterScreen(
     navController: NavController,
+    viewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(
+            repository = AuthRepository(
+                apiService = RetrofitInstance.api,
+                dataStoreManager = DataStoreManager.getInstance(context = LocalContext.current)
+            )
+        )
+    )
+
 ) {
-    var txfKonfirmPassword by rememberSaveable {
-        mutableStateOf("")
-    }
 
-    var txfNama by rememberSaveable {
-        mutableStateOf("")
-    }
+    var txfUsername by rememberSaveable { mutableStateOf("") }
 
-    val context = LocalContext.current
+    var txfEmail by rememberSaveable { mutableStateOf("") }
 
-    var txfNoTel by rememberSaveable {
-        mutableStateOf("")
-    }
+    var txfPassword by rememberSaveable { mutableStateOf("") }
 
-    var txfEmail by rememberSaveable {
-        mutableStateOf("")
-    }
+    var obscureText by remember { mutableStateOf(true) }
 
-    var txfPassword by rememberSaveable {
-        mutableStateOf("")
-    }
+    val registerResult by viewModel.registerResult.observeAsState()
 
-    var obsucureText by remember {
-        mutableStateOf(true)
-    }
-
-    var obsucureText2 by remember {
-        mutableStateOf(true)
-    }
     val keyboardController = LocalSoftwareKeyboardController.current
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(
-                horizontal = 16.dp,
-            )
+            .padding(horizontal = 16.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.Start
     ) {
@@ -114,37 +112,30 @@ fun RegisterScreen(
         )
         Spacer(modifier = Modifier.height(50.dp))
         Text(
-            text = stringResource(id = R.string.nama),
+            text = stringResource(id = R.string.username),
             fontSize = 15.sp,
             color = gray900,
             fontWeight = FontWeight.SemiBold
         )
         OutlinedTextField(
-            value = txfNama,
+            value = txfUsername,
             onValueChange = {
-                txfNama = it
+                txfUsername = it
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(
-                    top = 5.dp
-                ),
+                .padding(top = 5.dp),
             shape = RoundedCornerShape(10.dp),
             leadingIcon = {
                 Icon(
                     painter = painterResource(id = R.drawable.icon_account),
-                    contentDescription = stringResource(
-                        id = R.string.nama
-                    ),
+                    contentDescription = stringResource(id = R.string.username),
                     modifier = Modifier.size(25.dp),
                     tint = gray
                 )
             },
-            textStyle = TextStyle(
-                fontSize = 15.sp,
-                color = Color.Black
-            ),
+            textStyle = TextStyle(fontSize = 15.sp, color = Color.Black),
             placeholder = {
                 Text(
                     text = "enter your name",
@@ -168,7 +159,6 @@ fun RegisterScreen(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-
         Text(
             text = stringResource(id = R.string.email),
             fontSize = 15.sp,
@@ -183,24 +173,17 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(
-                    top = 5.dp
-                ),
+                .padding(top = 5.dp),
             shape = RoundedCornerShape(10.dp),
             leadingIcon = {
                 Icon(
                     painter = painterResource(id = R.drawable.icon_email),
-                    contentDescription = stringResource(
-                        id = R.string.email
-                    ),
+                    contentDescription = stringResource(id = R.string.email),
                     modifier = Modifier.size(25.dp),
                     tint = gray
                 )
             },
-            textStyle = TextStyle(
-                fontSize = 15.sp,
-                color = Color.Black
-            ),
+            textStyle = TextStyle(fontSize = 15.sp, color = Color.Black),
             placeholder = {
                 Text(
                     text = "name@example.com",
@@ -224,65 +207,6 @@ fun RegisterScreen(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-
-
-        Text(
-            text = stringResource(id = R.string.noTel),
-            fontSize = 15.sp,
-            color = gray900,
-            fontWeight = FontWeight.SemiBold
-        )
-        OutlinedTextField(
-            value = txfNoTel,
-            onValueChange = {
-                txfNoTel = it
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(
-                    top = 5.dp
-                ),
-            shape = RoundedCornerShape(10.dp),
-            leadingIcon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.icon_number_phone),
-                    contentDescription = stringResource(
-                        id = R.string.noTel
-                    ),
-                    modifier = Modifier.size(25.dp),
-                    tint = gray
-                )
-            },
-            textStyle = TextStyle(
-                fontSize = 15.sp,
-                color = Color.Black
-            ),
-            placeholder = {
-                Text(
-                    text = "enter your number phone",
-                    fontSize = 14.sp,
-                    color = gray
-                )
-            },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                keyboardType = KeyboardType.Phone
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    keyboardController?.hide()
-                }
-            ),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = brandPrimary500,
-                unfocusedBorderColor = gray
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-
         Text(
             text = stringResource(id = R.string.kata_sandi),
             fontSize = 15.sp,
@@ -297,24 +221,17 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(
-                    top = 5.dp
-                ),
+                .padding(top = 5.dp),
             shape = RoundedCornerShape(10.dp),
             leadingIcon = {
                 Icon(
                     painter = painterResource(id = R.drawable.icon_password),
-                    contentDescription = stringResource(
-                        id = R.string.kata_sandi
-                    ),
+                    contentDescription = stringResource(id = R.string.kata_sandi),
                     modifier = Modifier.size(25.dp),
                     tint = gray
                 )
             },
-            textStyle = TextStyle(
-                fontSize = 15.sp,
-                color = Color.Black
-            ),
+            textStyle = TextStyle(fontSize = 15.sp, color = Color.Black),
             placeholder = {
                 Text(
                     text = "enter your password",
@@ -335,99 +252,14 @@ fun RegisterScreen(
                 focusedBorderColor = brandPrimary500,
                 unfocusedBorderColor = gray
             ),
-            visualTransformation = if (obsucureText)
-                PasswordVisualTransformation()
-            else VisualTransformation.None,
+            visualTransformation = if (obscureText) PasswordVisualTransformation() else VisualTransformation.None,
             trailingIcon = {
                 IconButton(onClick = {
-                    obsucureText = !obsucureText
+                    obscureText = !obscureText
                 }) {
-                    val visibilityIcon = if (obsucureText)
-                        Icons.Filled.VisibilityOff
-                    else Icons.Filled.Visibility
-
-                    val description = if (obsucureText)
-                        "Hide Password"
-                    else "Show Password"
-
-                    Icon(
-                        imageVector = visibilityIcon,
-                        contentDescription = description,
-                        tint = gray
-                    )
-                }
-            },
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-        Text(
-            text = stringResource(id = R.string.konfirmasi_kata_sandi),
-            fontSize = 15.sp,
-            color = gray900,
-            fontWeight = FontWeight.SemiBold
-        )
-        OutlinedTextField(
-            value = txfKonfirmPassword,
-            onValueChange = {
-                txfKonfirmPassword = it
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(
-                    top = 5.dp
-                ),
-            shape = RoundedCornerShape(10.dp),
-            leadingIcon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.icon_password),
-                    contentDescription = stringResource(
-                        id = R.string.kata_sandi
-                    ),
-                    modifier = Modifier.size(25.dp),
-                    tint = gray
-                )
-            },
-            textStyle = TextStyle(
-                fontSize = 15.sp,
-                color = Color.Black
-            ),
-            placeholder = {
-                Text(
-                    text = "enter your password",
-                    fontSize = 16.sp,
-                    color = gray
-                )
-            },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                keyboardType = KeyboardType.Password
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    keyboardController?.hide()
-                }
-            ),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = brandPrimary500,
-                unfocusedBorderColor = gray
-            ),
-            visualTransformation = if (obsucureText2)
-                PasswordVisualTransformation()
-            else VisualTransformation.None,
-            trailingIcon = {
-                IconButton(onClick = {
-                    obsucureText2 = !obsucureText2
-                }) {
-                    val visibilityIcon = if (obsucureText2)
-                        Icons.Filled.VisibilityOff
-                    else Icons.Filled.Visibility
-
-                    val description = if (obsucureText2)
-                        "Hide Password"
-                    else "Show Password"
-
+                    val visibilityIcon =
+                        if (obscureText) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                    val description = if (obscureText) "Hide Password" else "Show Password"
                     Icon(
                         imageVector = visibilityIcon,
                         contentDescription = description,
@@ -437,28 +269,65 @@ fun RegisterScreen(
             },
         )
         Spacer(modifier = Modifier.height(22.dp))
+
         ButtonStyle(
             onClicked = {
-                navController.navigate(NavigationTourScreen.LoginScreen.name)
+                viewModel.register(
+                    RegisterModel(
+                        username = txfUsername,
+                        email = txfEmail,
+                        password = txfPassword
+                    )
+                )
             },
             text = stringResource(id = R.string.register),
         )
+
+        // Menampilkan pesan sukses atau error setelah registrasi
+        registerResult?.let { result ->
+            when (result) {
+                is AuthResult.Success -> {
+                    // Jika registrasi berhasil, navigasi ke halaman login
+                    navController.navigate(
+                        NavigationTourScreen.HalamanBottom.name
+                    )
+                    Toast.makeText(LocalContext.current, "Berhasil Registrasi", Toast.LENGTH_SHORT)
+                        .show()
+                }
+
+                is AuthResult.Error -> {
+                    // Handle error jika registrasi gagal
+                    // Misalnya, tampilkan pesan kesalahan kepada pengguna
+                    Toast.makeText(LocalContext.current, result.message, Toast.LENGTH_SHORT).show()
+                }
+
+                AuthResult.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(40.dp),
+                            color = brandPrimary500
+                        )
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
+
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.BottomCenter
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = stringResource(id = R.string.sudahPunyaAkun),
                     fontSize = 14.sp,
                 )
                 TextButton(onClick = {
-                    navController.navigate(
-                        NavigationTourScreen.LoginScreen.name
-                    )
+                    navController.navigate(NavigationTourScreen.LoginScreen.name)
                 }) {
                     Text(
                         text = stringResource(id = R.string.masuk),
@@ -469,13 +338,5 @@ fun RegisterScreen(
             }
         }
     }
-}
 
-@Suppress("VisualLintAccessibilityTestFramework")
-@Preview(showSystemUi = true)
-@Composable
-fun PreviewRegisterScreen() {
-    RegisterScreen(
-        navController = rememberNavController()
-    )
 }

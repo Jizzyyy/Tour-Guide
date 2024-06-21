@@ -156,4 +156,11 @@ dependencies {
     //noinspection UseTomlInstead
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
 
+    // DATA STORE
+    //noinspection UseTomlInstead
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    //noinspection UseTomlInstead
+    implementation ("androidx.compose.runtime:runtime:1.6.8")
+
 }

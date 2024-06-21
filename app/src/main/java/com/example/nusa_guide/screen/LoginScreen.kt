@@ -1,5 +1,6 @@
 package com.example.nusa_guide.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -25,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -41,32 +45,50 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.nusa_guide.R
+import com.example.nusa_guide.api.RetrofitInstance
+import com.example.nusa_guide.api.response.AuthResult
+import com.example.nusa_guide.data.DataStoreManager
+import com.example.nusa_guide.model.LoginModel
 import com.example.nusa_guide.navigation.NavigationTourScreen
+import com.example.nusa_guide.repository.AuthRepository
 import com.example.nusa_guide.ui.theme.brandPrimary500
 import com.example.nusa_guide.ui.theme.gray
 import com.example.nusa_guide.ui.theme.gray700
 import com.example.nusa_guide.ui.theme.gray900
 import com.example.nusa_guide.ui.theme.primary700
+import com.example.nusa_guide.viewModel.AuthViewModel
+import com.example.nusa_guide.viewModel.AuthViewModelFactory
 import com.example.nusa_guide.widget.ButtonStyle
 
 
 @Composable
 fun LoginScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(
+            repository = AuthRepository(
+                apiService = RetrofitInstance.api,
+                dataStoreManager = DataStoreManager.getInstance(context = LocalContext.current)
+            )
+        )
+    )
 ) {
 
     var txfUsername by rememberSaveable { mutableStateOf("") }
+
     var txfPassword by rememberSaveable { mutableStateOf("") }
+
     var obscureText by remember { mutableStateOf(true) }
 
+    val loginResult by viewModel.loginResult.observeAsState()
 
     val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -91,7 +113,7 @@ fun LoginScreen(
         )
         Spacer(modifier = Modifier.height(50.dp))
         Text(
-            text = stringResource(id = R.string.email),
+            text = stringResource(id = R.string.username),
             fontSize = 15.sp,
             color = gray900,
             fontWeight = FontWeight.SemiBold
@@ -239,10 +261,45 @@ fun LoginScreen(
         }
         ButtonStyle(
             onClicked = {
-                navController.navigate(NavigationTourScreen.HalamanBottom.name)
+                viewModel.login(
+                    loginModel = LoginModel(
+                        txfUsername,
+                        txfPassword
+                    )
+                )
             },
             text = stringResource(id = R.string.masuk),
         )
+        // Menampilkan pesan sukses atau error setelah registrasi
+        loginResult?.let { result ->
+            when (result) {
+                is AuthResult.Success -> {
+                    // Jika registrasi berhasil, navigasi ke halaman login
+                    navController.navigate(NavigationTourScreen.HalamanBottom.name)
+                    Toast.makeText(LocalContext.current, "Berhasil Login", Toast.LENGTH_SHORT)
+                        .show()
+                }
+
+                is AuthResult.Error -> {
+                    // Handle error jika registrasi gagal
+                    // Misalnya, tampilkan pesan kesalahan kepada pengguna
+                    Toast.makeText(LocalContext.current, result.message, Toast.LENGTH_SHORT).show()
+                }
+
+                AuthResult.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(40.dp),
+                            color = brandPrimary500
+                        )
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
         Box(
             modifier = Modifier.fillMaxWidth(),
@@ -269,12 +326,5 @@ fun LoginScreen(
             }
         }
     }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen(
-        navController = rememberNavController(),
-    )
 }

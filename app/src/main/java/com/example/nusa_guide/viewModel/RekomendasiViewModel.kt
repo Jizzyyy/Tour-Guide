@@ -4,16 +4,17 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.nusa_guide.model.RekomendasiModel
+import com.example.nusa_guide.model.WisataModel
 import com.example.nusa_guide.repository.RekomendasiRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class RekomendasiViewModel(private val repository: RekomendasiRepository) : ViewModel() {
-    private val _state = MutableStateFlow(emptyList<RekomendasiModel>())
-    val state: StateFlow<List<RekomendasiModel>> = _state
+    private val _state = MutableStateFlow(emptyList<WisataModel>())
+    val state: StateFlow<List<WisataModel>> = _state
 
+    private var currentQuery = ""
     init {
         viewModelScope.launch {
             try {
@@ -25,8 +26,19 @@ class RekomendasiViewModel(private val repository: RekomendasiRepository) : View
             }
         }
     }
-}
 
+    fun searchRekomendasi(query: String) {
+        currentQuery = query
+        viewModelScope.launch {
+            try {
+                val rekomendasiRepository = repository.searchRekomendasi(query)
+                _state.value = rekomendasiRepository
+            } catch (e: Exception) {
+                Log.e("RekomendasiViewModel", "Error searching data: ${e.message}")
+            }
+        }
+    }
+}
 
 @Suppress("UNCHECKED_CAST")
 class RekomendasiViewModelFactory(private val repository: RekomendasiRepository) : ViewModelProvider.Factory {
